@@ -17,44 +17,26 @@ jobs:
       - name: Count solutions by difficulty
         id: count
         run: |
-          # Load NeetCode 150 difficulty mapping
-          MAPPING='.github/neetcode150.json'
-          
           easy=0
           medium=0
           hard=0
-          total=0
           
-          # Iterate through all directories containing .py files
-          for dir in */; do
-            # Skip hidden directories and .github
-            [[ "$dir" == .* ]] && continue
-            [[ "$dir" == ".github/" ]] && continue
+          # Find all problem README files (in subdirectories, not root)
+          for readme in */README.md; do
+            [ -f "$readme" ] || continue
             
-            # Check if directory contains a .py file
-            if ls "$dir"*.py 1> /dev/null 2>&1; then
-              # Normalize folder name: lowercase, replace spaces with hyphens
-              folder_name=$(basename "$dir" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '_' '-')
-              
-              # Remove leading numbers and hyphens (e.g., "0001-two-sum" -> "two-sum")
-              normalized=$(echo "$folder_name" | sed -E 's/^[0-9]+-//')
-              
-              # Look up difficulty
-              difficulty=$(jq -r --arg key "$normalized" '.[$key] // empty' "$MAPPING")
-              
-              if [ -n "$difficulty" ]; then
-                case $difficulty in
-                  "Easy") ((easy++)) ;;
-                  "Medium") ((medium++)) ;;
-                  "Hard") ((hard++)) ;;
-                esac
-                ((total++))
-              else
-                # If not in NeetCode 150, count as uncategorized but still count total
-                ((total++))
-              fi
+            # Extract difficulty from shields.io badge
+            # Pattern: Difficulty-Easy-brightgreen, Difficulty-Medium-orange, Difficulty-Hard-red
+            if grep -q "Difficulty-Easy" "$readme"; then
+              ((easy++))
+            elif grep -q "Difficulty-Medium" "$readme"; then
+              ((medium++))
+            elif grep -q "Difficulty-Hard" "$readme"; then
+              ((hard++))
             fi
           done
+          
+          total=$((easy + medium + hard))
           
           echo "easy=$easy" >> $GITHUB_OUTPUT
           echo "medium=$medium" >> $GITHUB_OUTPUT
@@ -69,19 +51,24 @@ jobs:
           total=${{ steps.count.outputs.total }}
           
           # Create the new stats table
-          stats_table="| Difficulty | Solved |
+          cat > /tmp/stats.md << EOF
+          | Difficulty | Solved |
           |------------|--------|
           | Easy       | $easy  |
           | Medium     | $medium |
           | Hard       | $hard  |
-          | **Total**  | **$total** |"
+          | **Total**  | **$total** |
+          EOF
           
-          # Update README between markers
-          awk -v stats="$stats_table" '
-            /<!-- STATS:START -->/ { print; print stats; skip=1; next }
-            /<!-- STATS:END -->/ { skip=0 }
-            !skip { print }
-          ' README.md > README.tmp && mv README.tmp README.md
+          # Update README between markers using sed
+          sed -i '/<!-- STATS:START -->/,/<!-- STATS:END -->/{ 
+            /<!-- STATS:START -->/{ 
+              p
+              r /tmp/stats.md
+            }
+            /<!-- STATS:END -->/p
+            d
+          }' README.md
 
       - name: Commit changes
         run: |
