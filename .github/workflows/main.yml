@@ -26,13 +26,12 @@ jobs:
             [ -f "$readme" ] || continue
             
             # Extract difficulty from shields.io badge
-            # Pattern: Difficulty-Easy-brightgreen, Difficulty-Medium-orange, Difficulty-Hard-red
             if grep -q "Difficulty-Easy" "$readme"; then
-              ((easy++))
+              easy=$((easy + 1))
             elif grep -q "Difficulty-Medium" "$readme"; then
-              ((medium++))
+              medium=$((medium + 1))
             elif grep -q "Difficulty-Hard" "$readme"; then
-              ((hard++))
+              hard=$((hard + 1))
             fi
           done
           
