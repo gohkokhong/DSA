@@ -1,0 +1,92 @@
+name: Update Stats
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Count solutions by difficulty
+        id: count
+        run: |
+          # Load NeetCode 150 difficulty mapping
+          MAPPING='.github/neetcode150.json'
+          
+          easy=0
+          medium=0
+          hard=0
+          total=0
+          
+          # Iterate through all directories containing .py files
+          for dir in */; do
+            # Skip hidden directories and .github
+            [[ "$dir" == .* ]] && continue
+            [[ "$dir" == ".github/" ]] && continue
+            
+            # Check if directory contains a .py file
+            if ls "$dir"*.py 1> /dev/null 2>&1; then
+              # Normalize folder name: lowercase, replace spaces with hyphens
+              folder_name=$(basename "$dir" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '_' '-')
+              
+              # Remove leading numbers and hyphens (e.g., "0001-two-sum" -> "two-sum")
+              normalized=$(echo "$folder_name" | sed -E 's/^[0-9]+-//')
+              
+              # Look up difficulty
+              difficulty=$(jq -r --arg key "$normalized" '.[$key] // empty' "$MAPPING")
+              
+              if [ -n "$difficulty" ]; then
+                case $difficulty in
+                  "Easy") ((easy++)) ;;
+                  "Medium") ((medium++)) ;;
+                  "Hard") ((hard++)) ;;
+                esac
+                ((total++))
+              else
+                # If not in NeetCode 150, count as uncategorized but still count total
+                ((total++))
+              fi
+            fi
+          done
+          
+          echo "easy=$easy" >> $GITHUB_OUTPUT
+          echo "medium=$medium" >> $GITHUB_OUTPUT
+          echo "hard=$hard" >> $GITHUB_OUTPUT
+          echo "total=$total" >> $GITHUB_OUTPUT
+
+      - name: Update README
+        run: |
+          easy=${{ steps.count.outputs.easy }}
+          medium=${{ steps.count.outputs.medium }}
+          hard=${{ steps.count.outputs.hard }}
+          total=${{ steps.count.outputs.total }}
+          
+          # Create the new stats table
+          stats_table="| Difficulty | Solved |
+          |------------|--------|
+          | Easy       | $easy  |
+          | Medium     | $medium |
+          | Hard       | $hard  |
+          | **Total**  | **$total** |"
+          
+          # Update README between markers
+          awk -v stats="$stats_table" '
+            /<!-- STATS:START -->/ { print; print stats; skip=1; next }
+            /<!-- STATS:END -->/ { skip=0 }
+            !skip { print }
+          ' README.md > README.tmp && mv README.tmp README.md
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git diff --quiet && git diff --staged --quiet || git commit -m "📊 Update stats"
+          git push
