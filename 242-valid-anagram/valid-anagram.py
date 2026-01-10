@@ -1,14 +1,15 @@
 class Solution:
     def isAnagram(self, s: str, t: str) -> bool:
-        # Corner case
         if len(s) != len(t):
             return False
 
-        countS, countT = {}, {}
+        sDict, tDict = {}, {}
 
-        # Base case
-        for i in range(len(s)):
-            countS[s[i]] = 1 + countS.get(s[i], 0)
-            countT[t[i]] = 1 + countT.get(t[i], 0)
+        for index in range(len(s)):
+            sDict[s[index]] = 1 + sDict.get(s[index], 0)
+            tDict[t[index]] = 1 + tDict.get(t[index], 0)
 
-        return countS == countT
+        if sDict == tDict:
+            return True
+
+        return False
