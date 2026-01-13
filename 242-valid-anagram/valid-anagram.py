@@ -3,11 +3,13 @@ class Solution:
         if len(s) != len(t):
             return False
 
-        sDict, tDict = {}, {}
+        sDict = {}
+        tDict = {}
 
         for index in range(len(s)):
             sDict[s[index]] = 1 + sDict.get(s[index], 0)
             tDict[t[index]] = 1 + tDict.get(t[index], 0)
+
 
         if sDict == tDict:
             return True
