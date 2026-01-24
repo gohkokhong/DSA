@@ -19,4 +19,5 @@ class Solution:
 
             current = tempNext
 
+        # Return new head
         return prev
