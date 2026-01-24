@@ -6,11 +6,11 @@ class Solution:
         # While left is less than r:
         while left < right:
             # Move left forward until it points to an alphanumeric char
-            while left < right and not self.alphaNum(s[left]):
+            while left < right and not s[left].isalnum():
                 left += 1
 
             # Move right backward until it points to an alphanumeric char
-            while right > left and not self.alphaNum(s[right]):
+            while right > left and not s[right].isalnum():
                 right -= 1
 
             # Compare the lower case chars at left and right
@@ -23,10 +23,3 @@ class Solution:
 
         # If loop finishes without mismatch, return True
         return True
-
-    def alphaNum(self, char):
-        return (
-            ord('a') <= ord(char) <= ord('z') or
-            ord('A') <= ord(char) <= ord('Z') or
-            ord('0') <= ord(char) <= ord('9')
-        )
