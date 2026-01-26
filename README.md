@@ -13,10 +13,10 @@ Each folder represents a LeetCode problem and contains:
 <!-- STATS:START -->
 | Difficulty | Solved |
 |------------|--------|
-| Easy       | 6  |
+| Easy       | 7  |
 | Medium     | 0 |
 | Hard       | 0  |
-| **Total**  | **6** |
+| **Total**  | **7** |
 <!-- STATS:END -->
 
 ## Topics Covered
