@@ -14,9 +14,9 @@ Each folder represents a LeetCode problem and contains:
 | Difficulty | Solved |
 |------------|--------|
 | Easy       | 7  |
-| Medium     | 0 |
+| Medium     | 1 |
 | Hard       | 0  |
-| **Total**  | **7** |
+| **Total**  | **8** |
 <!-- STATS:END -->
 
 ## Topics Covered
